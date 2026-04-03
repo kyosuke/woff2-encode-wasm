@@ -2,7 +2,7 @@
 
 Encode TTF/OTF fonts to WOFF2 using the official [google/woff2](https://github.com/google/woff2) C++ library compiled to WebAssembly.
 
-**Primary runtime target: Cloudflare Workers.** Also works in Node.js ≥ 18.
+**Primary runtime target: Cloudflare Workers.** Also works in Node.js ≥ 18 and Deno.
 
 ## What this package does
 
@@ -91,6 +91,22 @@ await init(wasmBuf);
 
 const ttf = new Uint8Array(readFileSync('input.ttf'));
 const woff2 = await encode(ttf);
+```
+
+### Deno
+
+```ts
+import { init, encode } from './dist/index.js';
+
+const wasmBuf = await Deno.readFile('./dist/encoder.wasm');
+await init(wasmBuf);
+
+const ttf = new Uint8Array(await Deno.readFile('input.ttf'));
+const woff2 = await encode(ttf);
+```
+
+```bash
+deno run --allow-read your_script.ts
 ```
 
 ## Build from source
