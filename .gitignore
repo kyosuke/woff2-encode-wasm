@@ -1,0 +1,8 @@
+node_modules/
+dist/
+vendor/google-woff2/
+vendor/brotli/
+build/
+*.o
+*.a
+.wrangler/

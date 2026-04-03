@@ -1,0 +1,51 @@
+{
+  "name": "woff2-encode-wasm",
+  "version": "0.1.0",
+  "description": "Encode TTF/OTF fonts to WOFF2 using the official google/woff2 library compiled to WebAssembly",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./encoder.wasm": "./dist/encoder.wasm"
+  },
+  "files": [
+    "dist/index.js",
+    "dist/index.d.ts",
+    "dist/encoder.wasm"
+  ],
+  "scripts": {
+    "fetch-deps": "bash scripts/fetch-deps.sh",
+    "build:wasm": "bash scripts/build-wasm.sh",
+    "build:js": "tsc",
+    "build": "npm run fetch-deps && npm run build:wasm && npm run build:js",
+    "test": "node --test test/encode.test.js",
+    "clean": "rm -rf dist vendor/google-woff2 vendor/brotli"
+  },
+  "keywords": [
+    "woff2",
+    "encode",
+    "wasm",
+    "webassembly",
+    "font",
+    "ttf",
+    "otf",
+    "cloudflare-workers"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kyosuke/woff2-encode-wasm"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "wrangler": "^4.80.0"
+  }
+}
