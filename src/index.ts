@@ -11,8 +11,8 @@
  *   - wasi_snapshot_preview1.proc_exit     (throws — should never fire)
  *
  * For Cloudflare Workers the caller passes a pre-compiled WebAssembly.Module
- * (imported from the .wasm file by the bundler). For browsers and Node the
- * caller can pass an ArrayBuffer, a URL, or a fetch Response.
+ * (imported from the .wasm file by the bundler). For Node.js and Deno the
+ * caller can pass an ArrayBuffer or Uint8Array of the .wasm bytes.
  */
 
 // The shape of our C ABI exports.
@@ -61,17 +61,17 @@ const importObject = {
  * await init(wasmModule);
  * ```
  *
- * In **browsers**, you can pass a `fetch()` response:
+ * In **Node.js / Deno**, pass the raw `.wasm` bytes:
  * ```ts
- * await init(fetch('/encoder.wasm'));
+ * await init(fs.readFileSync('encoder.wasm'));
  * ```
  *
- * If called without arguments and a previous init() is in progress, it
- * returns the same promise (idempotent).
+ * Calling `init()` again after initialisation has started is a no-op —
+ * the first call's source wins.
  */
-export async function init(source?: WasmSource): Promise<void> {
+export async function init(source: WasmSource): Promise<void> {
   if (exports) return;
-  if (initPromise && !source) return initPromise;
+  if (initPromise) return initPromise;
 
   initPromise = (async () => {
     let instance: WebAssembly.Instance;
@@ -80,19 +80,18 @@ export async function init(source?: WasmSource): Promise<void> {
       // Cloudflare Workers path: already a compiled Module
       instance = await WebAssembly.instantiate(source, importObject);
     } else if (source instanceof Response || source instanceof Promise) {
-      // Browser path: streaming compile from fetch Response
+      // Streaming compile from fetch Response
       const response = source instanceof Promise ? await source : source;
       const result = await WebAssembly.instantiateStreaming(response, importObject);
       instance = result.instance;
     } else if (source) {
-      // ArrayBuffer / Uint8Array path
+      // ArrayBuffer / Uint8Array path (Node.js, Deno)
       const result = await WebAssembly.instantiate(source, importObject);
       instance = result.instance;
     } else {
       throw new Error(
         'woff2-encode-wasm: init() requires a WasmSource argument. ' +
-        'Pass a WebAssembly.Module (Workers), fetch Response (browser), ' +
-        'or ArrayBuffer (Node).'
+        'Pass a WebAssembly.Module (Workers) or ArrayBuffer/Uint8Array (Node/Deno).'
       );
     }
 
@@ -151,31 +150,35 @@ export async function encode(input: Uint8Array): Promise<Uint8Array> {
         1: 'MaxWOFF2CompressedSize returned 0 — input is not a valid font.',
         2: 'Failed to allocate output buffer.',
         3: 'ConvertTTFToWOFF2 failed — font may be corrupt or unsupported.',
+        4: 'Null input pointer.',
       };
       throw new Error(
         `woff2-encode-wasm: encoding failed (code ${rc}). ${messages[rc] ?? ''}`
       );
     }
 
-    // 3. Copy result out of Wasm memory into a fresh Uint8Array.
-    const resultPtr = woff2_result_ptr();
-    const resultSize = woff2_result_size();
-    // Re-read memory.buffer — it may have grown during encoding.
-    const result = new Uint8Array(memory.buffer, resultPtr, resultSize).slice();
+    // 3. Copy result out of Wasm memory into a fresh Uint8Array,
+    //    then always free the Wasm-side result buffer.
+    try {
+      const resultPtr = woff2_result_ptr();
+      const resultSize = woff2_result_size();
+      // Re-read memory.buffer — it may have grown during encoding.
+      const result = new Uint8Array(memory.buffer, resultPtr, resultSize).slice();
 
-    // Sanity check: WOFF2 files start with 'wOF2'.
-    if (result.length >= 4) {
-      const sig =
-        (result[0] << 24) | (result[1] << 16) | (result[2] << 8) | result[3];
-      if (sig !== WOFF2_SIGNATURE) {
-        throw new Error('woff2-encode-wasm: output does not have wOF2 signature.');
+      // Sanity check: WOFF2 files start with 'wOF2'.
+      if (result.length >= 4) {
+        const sig =
+          (result[0] << 24) | (result[1] << 16) | (result[2] << 8) | result[3];
+        if (sig !== WOFF2_SIGNATURE) {
+          throw new Error('woff2-encode-wasm: output does not have wOF2 signature.');
+        }
       }
+
+      return result;
+    } finally {
+      // 4. Free the Wasm-side result buffer even if the signature check throws.
+      woff2_result_free();
     }
-
-    // 4. Free the Wasm-side result buffer.
-    woff2_result_free();
-
-    return result;
   } finally {
     // Always free the input buffer.
     woff2_free(inputPtr);

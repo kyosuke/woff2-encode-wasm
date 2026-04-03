@@ -1,12 +1,18 @@
 // Deno smoke test for woff2-encode-wasm
+// Run: deno run --allow-read test/deno-smoke.ts
+
+import { dirname, fromFileUrl, join } from 'https://deno.land/std/path/mod.ts';
 import { init, encode } from '../dist/index.js';
 
-const wasmBuf = await Deno.readFile('./dist/encoder.wasm');
+const testDir = dirname(fromFileUrl(import.meta.url));
+const rootDir = join(testDir, '..');
+
+const wasmBuf = await Deno.readFile(join(rootDir, 'dist', 'encoder.wasm'));
 await init(wasmBuf);
 console.log('init() succeeded');
 
 // Valid TTF encoding
-const ttf = await Deno.readFile('./test/fixtures/Abel-Regular.ttf');
+const ttf = await Deno.readFile(join(testDir, 'fixtures', 'Abel-Regular.ttf'));
 const woff2 = await encode(new Uint8Array(ttf));
 console.log(`encode() succeeded: ${ttf.length} bytes TTF → ${woff2.length} bytes WOFF2`);
 
@@ -14,6 +20,10 @@ console.log(`encode() succeeded: ${ttf.length} bytes TTF → ${woff2.length} byt
 const sig = String.fromCharCode(woff2[0], woff2[1], woff2[2], woff2[3]);
 if (sig !== 'wOF2') throw new Error(`bad signature: ${sig}`);
 console.log('wOF2 signature: OK');
+
+// Verify output is smaller than input
+if (woff2.length >= ttf.length) throw new Error('WOFF2 not smaller than input');
+console.log('compression ratio: OK');
 
 // Invalid input rejection
 try {
@@ -24,14 +34,11 @@ try {
   console.log('invalid input rejection: OK');
 }
 
-// Compare with Node output
-try {
-  const nodeOutput = await Deno.readFile('/tmp/node-output.woff2');
-  const match = woff2.length === nodeOutput.length &&
-    woff2.every((b, i) => b === nodeOutput[i]);
-  console.log(`byte-for-byte match with Node output: ${match ? 'YES' : 'NO'}`);
-} catch {
-  console.log('(skipped Node output comparison — /tmp/node-output.woff2 not found)');
+// Repeated calls produce identical output
+const woff2b = await encode(new Uint8Array(ttf));
+if (woff2.length !== woff2b.length || !woff2.every((b, i) => b === woff2b[i])) {
+  throw new Error('repeated calls produced different output');
 }
+console.log('repeated call consistency: OK');
 
 console.log('\nAll Deno checks passed.');

@@ -1,14 +1,15 @@
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load the compiled module and library.
 const wasmBuf = readFileSync(join(__dirname, '..', 'dist', 'encoder.wasm'));
-const { init, encode } = await import(join(__dirname, '..', 'dist', 'index.js'));
+const indexPath = pathToFileURL(join(__dirname, '..', 'dist', 'index.js')).href;
+const { init, encode } = await import(indexPath);
 
 const WOFF2_MAGIC = new Uint8Array([0x77, 0x4f, 0x46, 0x32]); // 'wOF2'
 const ttfBytes = new Uint8Array(

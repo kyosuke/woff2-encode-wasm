@@ -24,6 +24,9 @@
     "build:js": "tsc",
     "build": "npm run fetch-deps && npm run build:wasm && npm run build:js",
     "test": "node --test test/encode.test.js",
+    "test:deno": "deno run --allow-read test/deno-smoke.ts",
+    "test:all": "npm test && npm run test:deno",
+    "prepack": "test -f dist/index.js && test -f dist/index.d.ts && test -f dist/encoder.wasm || (echo 'ERROR: dist/ artifacts missing. Run npm run build first.' >&2 && exit 1)",
     "clean": "rm -rf dist vendor/google-woff2 vendor/brotli"
   },
   "keywords": [

@@ -37,7 +37,12 @@ void woff2_free(void* ptr) {
 //   1 — MaxWOFF2CompressedSize returned 0 (invalid input)
 //   2 — memory allocation failed for output buffer
 //   3 — ConvertTTFToWOFF2 failed (corrupt or unsupported font)
+//   4 — null input pointer with non-zero length
 int woff2_encode(const uint8_t* input, uint32_t input_len) {
+    if (input == nullptr && input_len > 0) {
+        return 4;
+    }
+
     // Free any prior result
     if (g_result_ptr) {
         free(g_result_ptr);

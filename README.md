@@ -44,7 +44,8 @@ Initialise the WebAssembly module. Must be called once before `encode()`.
 | Type | Use case |
 |---|---|
 | `WebAssembly.Module` | Cloudflare Workers (import `.wasm` file) |
-| `ArrayBuffer` / `Uint8Array` | Node.js (`fs.readFileSync`) |
+| `ArrayBuffer` / `Uint8Array` | Node.js / Deno (read `.wasm` bytes) |
+| `Response` / `Promise<Response>` | `fetch()` based loading |
 
 Calling `init()` again after successful initialisation is a no-op.
 
@@ -84,10 +85,12 @@ export default {
 
 ```js
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { init, encode } from 'woff2-encode-wasm';
 
-const wasmBuf = readFileSync('node_modules/woff2-encode-wasm/dist/encoder.wasm');
-await init(wasmBuf);
+const require = createRequire(import.meta.url);
+const wasmPath = require.resolve('woff2-encode-wasm/encoder.wasm');
+await init(readFileSync(wasmPath));
 
 const ttf = new Uint8Array(readFileSync('input.ttf'));
 const woff2 = await encode(ttf);

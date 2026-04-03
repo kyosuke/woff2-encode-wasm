@@ -9,6 +9,10 @@
 import wasmModule from '../../../dist/encoder.wasm';
 import { init, encode } from '../../../dist/index.js';
 
+// Maximum accepted input size (30 MB). Fonts larger than this are unusual
+// and would consume significant CPU time in a Worker.
+const MAX_INPUT_BYTES = 30 * 1024 * 1024;
+
 // Initialise the Wasm module once on cold start.
 // Workers reuse the same isolate for multiple requests, so this
 // promise is resolved once and cached.
@@ -44,8 +48,22 @@ export default {
     // --- Encode endpoint (POST) ---
     if (url.pathname === '/encode' && request.method === 'POST') {
       try {
+        // Reject oversized bodies early via Content-Length when available.
+        const cl = request.headers.get('content-length');
+        if (cl && Number(cl) > MAX_INPUT_BYTES) {
+          return new Response('Request body too large.', { status: 413 });
+        }
+
         await ready;
-        const input = new Uint8Array(await request.arrayBuffer());
+        const body = await request.arrayBuffer();
+        if (body.byteLength === 0) {
+          return new Response('Empty request body.', { status: 400 });
+        }
+        if (body.byteLength > MAX_INPUT_BYTES) {
+          return new Response('Request body too large.', { status: 413 });
+        }
+
+        const input = new Uint8Array(body);
         const woff2 = await encode(input);
         return new Response(woff2, {
           status: 200,
