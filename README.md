@@ -2,7 +2,7 @@
 
 Encode TTF/OTF fonts to WOFF2 using the official [google/woff2](https://github.com/google/woff2) C++ library compiled to WebAssembly.
 
-**Primary runtime target: Cloudflare Workers.** Also works in modern browsers and Node.js ≥ 18.
+**Primary runtime target: Cloudflare Workers.** Also works in Node.js ≥ 18.
 
 ## What this package does
 
@@ -44,7 +44,6 @@ Initialise the WebAssembly module. Must be called once before `encode()`.
 | Type | Use case |
 |---|---|
 | `WebAssembly.Module` | Cloudflare Workers (import `.wasm` file) |
-| `Response` or `Promise<Response>` | Browser (`fetch()`) |
 | `ArrayBuffer` / `Uint8Array` | Node.js (`fs.readFileSync`) |
 
 Calling `init()` again after successful initialisation is a no-op.
@@ -79,18 +78,6 @@ export default {
     });
   },
 };
-```
-
-### Browser
-
-```js
-import { init, encode } from 'woff2-encode-wasm';
-
-await init(fetch('/node_modules/woff2-encode-wasm/dist/encoder.wasm'));
-
-const response = await fetch('/fonts/MyFont.ttf');
-const ttf = new Uint8Array(await response.arrayBuffer());
-const woff2 = await encode(ttf);
 ```
 
 ### Node.js
