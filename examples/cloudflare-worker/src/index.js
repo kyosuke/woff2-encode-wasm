@@ -36,12 +36,13 @@ export default {
         // If we somehow reach here, something is wrong.
         return new Response('unexpected: encoding garbage succeeded', { status: 500 });
       } catch (err) {
-        if (/encoding failed/.test(err.message)) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (/encoding failed/.test(message)) {
           return new Response('self-test passed: encoder rejects invalid input', {
             status: 200,
           });
         }
-        return new Response(`self-test error: ${err.message}`, { status: 500 });
+        return new Response(`self-test error: ${message}`, { status: 500 });
       }
     }
 
@@ -73,7 +74,10 @@ export default {
           },
         });
       } catch (err) {
-        return new Response(err.message, { status: 400 });
+        const message = err instanceof Error ? err.message : 'Internal error';
+        // Encoding failures (bad input) → 400; everything else → 500.
+        const status = message.includes('encoding failed') ? 400 : 500;
+        return new Response(message, { status });
       }
     }
 

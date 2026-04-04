@@ -80,10 +80,22 @@ export async function init(source: WasmSource): Promise<void> {
       // Cloudflare Workers path: already a compiled Module
       instance = await WebAssembly.instantiate(source, importObject);
     } else if (source instanceof Response || source instanceof Promise) {
-      // Streaming compile from fetch Response
+      // Streaming compile from fetch Response.
+      // instantiateStreaming requires content-type: application/wasm.
+      // Fall back to arrayBuffer() when the MIME type is wrong or
+      // when instantiateStreaming is not available.
       const response = source instanceof Promise ? await source : source;
-      const result = await WebAssembly.instantiateStreaming(response, importObject);
-      instance = result.instance;
+      if (
+        typeof WebAssembly.instantiateStreaming === 'function' &&
+        (response.headers.get('content-type') || '').trim().toLowerCase().startsWith('application/wasm')
+      ) {
+        const result = await WebAssembly.instantiateStreaming(response, importObject);
+        instance = result.instance;
+      } else {
+        const buf = await response.arrayBuffer();
+        const result = await WebAssembly.instantiate(buf, importObject);
+        instance = result.instance;
+      }
     } else if (source) {
       // ArrayBuffer / Uint8Array path (Node.js, Deno)
       const result = await WebAssembly.instantiate(source, importObject);

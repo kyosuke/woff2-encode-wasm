@@ -71,4 +71,32 @@ describe('woff2-encode-wasm', () => {
       expect(result.length).toBeGreaterThan(0);
     });
   });
+
+  describe('init() with Response source', () => {
+    it('accepts a Response with non-wasm content-type (fallback path)', async () => {
+      const { init: freshInit, encode: freshEncode } = await import(
+        '../src/index.js?response-fallback'
+      );
+      const response = new Response(wasmBuf, {
+        headers: { 'content-type': 'application/octet-stream' },
+      });
+      await freshInit(response);
+      const result = await freshEncode(ttfBytes);
+      expect(result.slice(0, 4)).toEqual(WOFF2_MAGIC);
+    });
+
+    it('accepts a Promise<Response>', async () => {
+      const { init: freshInit, encode: freshEncode } = await import(
+        '../src/index.js?promise-response'
+      );
+      const response = Promise.resolve(
+        new Response(wasmBuf, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+      );
+      await freshInit(response);
+      const result = await freshEncode(ttfBytes);
+      expect(result.slice(0, 4)).toEqual(WOFF2_MAGIC);
+    });
+  });
 });

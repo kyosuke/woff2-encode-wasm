@@ -99,26 +99,33 @@ const woff2 = await encode(ttf);
 ### Deno
 
 ```ts
-import { init, encode } from './dist/index.js';
+import { init, encode } from 'npm:woff2-encode-wasm';
+import { createRequire } from 'node:module';
 
-const wasmBuf = await Deno.readFile('./dist/encoder.wasm');
-await init(wasmBuf);
+const require = createRequire(import.meta.url);
+const wasmPath = require.resolve('woff2-encode-wasm/encoder.wasm');
+await init(Deno.readFileSync(wasmPath));
 
 const ttf = new Uint8Array(await Deno.readFile('input.ttf'));
 const woff2 = await encode(ttf);
 ```
 
 ```bash
-deno run --allow-read your_script.ts
+deno run --allow-read --allow-env your_script.ts
 ```
 
 ## Build from source
 
-Prerequisites: [Emscripten SDK](https://emscripten.org/docs/getting_started/) (`emcc` on PATH).
+Prerequisites:
+
+- [Emscripten SDK](https://emscripten.org/docs/getting_started/) (`emcc` on PATH) — for building the `.wasm`
+- [Deno](https://deno.com/) — only needed for `npm test` (runs the Deno smoke test)
 
 ```bash
 npm run build          # fetch deps + compile wasm + compile TS
-npm test               # run tests
+npm test               # run all tests (Node + Workers + Deno)
+npm run test:node      # Node.js tests only (no Deno required)
+npm run test:workers   # Cloudflare Workers tests only
 ```
 
 Individual steps:
@@ -178,7 +185,7 @@ This makes the module trivially instantiable in any environment without Emscript
 |---|---|
 | google/woff2 | v1.0.2 |
 | google/brotli | v1.1.0 |
-| Emscripten | latest (at build time) |
+| Emscripten | latest (at build time; v0.1.1 built with 5.0.4) |
 
 ## License
 
