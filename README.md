@@ -194,7 +194,7 @@ This makes the module trivially instantiable in any environment without Emscript
 |---|---|
 | google/woff2 | v1.0.2 |
 | google/brotli | v1.1.0 |
-| Emscripten | latest (at build time; v0.1.1 built with 5.0.4) |
+| Emscripten | CI pinned to 5.0.5 (local builds may vary) |
 
 ## License
 

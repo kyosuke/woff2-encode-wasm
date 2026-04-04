@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.14.1
+          cache: npm
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.7.11
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Emscripten SDK (pinned)
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$HOME/emsdk"
+          "$HOME/emsdk/emsdk" install 5.0.5
+          "$HOME/emsdk/emsdk" activate 5.0.5
+
+      - name: Build (wasm + js)
+        run: |
+          source "$HOME/emsdk/emsdk_env.sh" > /dev/null
+          npm run build
+
+      - name: Verify dist is up to date
+        run: |
+          if ! git diff --quiet -- dist; then
+            echo "::error::dist/ is out of date. Run npm run build and commit updated artifacts."
+            git --no-pager diff -- dist
+            exit 1
+          fi
+
+      - name: Run tests
+        run: npm test
+
+      - name: Validate npm package
+        run: npm pack --dry-run
