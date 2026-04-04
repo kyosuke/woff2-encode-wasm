@@ -93,6 +93,18 @@ emcc \
   "${ALL_OBJS[@]}" \
   -o "$DIST_DIR/encoder.wasm"
 
+# Post-link wasm-specific optimization pass (complements emcc -O3 -flto).
+# wasm-opt lives in emsdk's upstream/bin/, not next to emcc.
+EMSDK_BIN="$(cd "$(dirname "$(command -v emcc)")/../bin" 2>/dev/null && pwd)"
+WASM_OPT="${WASM_OPT:-$(command -v wasm-opt 2>/dev/null || echo "$EMSDK_BIN/wasm-opt")}"
+
+if [ -x "$WASM_OPT" ]; then
+  echo "Running wasm-opt..."
+  "$WASM_OPT" -Oz --strip-producers \
+    --enable-bulk-memory --enable-nontrapping-float-to-int \
+    "$DIST_DIR/encoder.wasm" -o "$DIST_DIR/encoder.wasm"
+fi
+
 # Clean up intermediate objects
 rm -rf "$BUILD_DIR"
 
