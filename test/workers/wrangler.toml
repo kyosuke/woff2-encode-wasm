@@ -1,0 +1,11 @@
+name = "woff2-encode-wasm-test"
+main = "./worker.ts"
+compatibility_date = "2024-01-01"
+
+[[rules]]
+type = "CompiledWasm"
+globs = ["**/*.wasm"]
+
+[[rules]]
+type = "Data"
+globs = ["**/*.ttf"]

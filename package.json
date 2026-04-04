@@ -23,8 +23,9 @@
     "build:wasm": "bash scripts/build-wasm.sh",
     "build:js": "tsc",
     "build": "npm run fetch-deps && npm run build:wasm && npm run build:js",
-    "test": "npm run test:node && npm run test:deno",
-    "test:node": "node --test test/encode.test.js",
+    "test": "npm run test:node && npm run test:workers && npm run test:deno",
+    "test:node": "vitest run --config vitest.config.ts",
+    "test:workers": "vitest run --config vitest.workers.config.ts",
     "test:deno": "deno run --allow-read test/deno-smoke.ts",
     "prepack": "test -f dist/index.js && test -f dist/index.d.ts && test -f dist/encoder.wasm || (echo 'ERROR: dist/ artifacts missing. Run npm run build first.' >&2 && exit 1)",
     "clean": "rm -rf dist vendor/google-woff2 vendor/brotli"
@@ -48,7 +49,9 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.14.1",
     "typescript": "^5.4.0",
+    "vitest": "^4.1.2",
     "wrangler": "^4.80.0"
   }
 }
