@@ -19,6 +19,11 @@ WOFF2_DIR="$VENDOR_DIR/google-woff2"
 BROTLI_DIR="$VENDOR_DIR/brotli"
 WRAPPER="$ROOT_DIR/src/native/wrapper.cc"
 
+# NOTE: We intentionally do not pin a specific emsdk version here.
+# The .wasm binary shipped in dist/ is pre-built, so end users never
+# run this script. Contributors who rebuild locally may use any recent
+# Emscripten. The version used for each release is recorded in README.md.
+# When CI is introduced, the emsdk version should be pinned there.
 if ! command -v emcc &>/dev/null; then
   echo "Error: emcc not found. Install Emscripten: https://emscripten.org/docs/getting_started/" >&2
   exit 1

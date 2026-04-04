@@ -4,6 +4,9 @@
  * Checks:
  *  1. Byte-for-byte equality
  *  2. If not equal: size difference, header comparison, structural diff
+ *
+ * Prerequisites:
+ *   npm install wawoff2   (not in devDependencies — only needed for this script)
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

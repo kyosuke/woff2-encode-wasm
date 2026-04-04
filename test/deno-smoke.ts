@@ -1,7 +1,7 @@
 // Deno smoke test for woff2-encode-wasm
 // Run: deno run --allow-read test/deno-smoke.ts
 
-import { dirname, fromFileUrl, join } from 'https://deno.land/std/path/mod.ts';
+import { dirname, fromFileUrl, join } from 'jsr:@std/path@^1';
 import { init, encode } from '../dist/index.js';
 
 const testDir = dirname(fromFileUrl(import.meta.url));

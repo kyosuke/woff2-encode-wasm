@@ -72,6 +72,11 @@ describe('woff2-encode-wasm', () => {
     });
   });
 
+  // NOTE: The instantiateStreaming branch (content-type: application/wasm) is
+  // not tested here because Node.js does not expose WebAssembly.instantiateStreaming.
+  // Mocking a browser-only API just for coverage would add complexity without
+  // catching real bugs — the branch delegates directly to the standard Web API
+  // with no additional logic beyond the MIME-type guard tested below.
   describe('init() with Response source', () => {
     it('accepts a Response with non-wasm content-type (fallback path)', async () => {
       const { init: freshInit, encode: freshEncode } = await import(
@@ -95,6 +100,26 @@ describe('woff2-encode-wasm', () => {
         })
       );
       await freshInit(response);
+      const result = await freshEncode(ttfBytes);
+      expect(result.slice(0, 4)).toEqual(WOFF2_MAGIC);
+    });
+
+    it('rejects a non-ok Response with an actionable error', async () => {
+      const { init: freshInit } = await import(
+        '../src/index.js?response-not-ok'
+      );
+      const response = new Response('Not Found', { status: 404 });
+      await expect(freshInit(response)).rejects.toThrow(/HTTP 404/);
+    });
+
+    it('allows retry after a failed init', async () => {
+      const { init: freshInit, encode: freshEncode } = await import(
+        '../src/index.js?retry-after-fail'
+      );
+      // First attempt: bad source → should fail
+      await expect(freshInit(new Uint8Array([0xde, 0xad]))).rejects.toThrow();
+      // Second attempt: valid source → should succeed
+      await freshInit(wasmBuf);
       const result = await freshEncode(ttfBytes);
       expect(result.slice(0, 4)).toEqual(WOFF2_MAGIC);
     });

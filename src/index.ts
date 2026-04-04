@@ -85,6 +85,12 @@ export async function init(source: WasmSource): Promise<void> {
       // Fall back to arrayBuffer() when the MIME type is wrong or
       // when instantiateStreaming is not available.
       const response = source instanceof Promise ? await source : source;
+      if (!response.ok) {
+        throw new Error(
+          `woff2-encode-wasm: fetch failed with HTTP ${response.status}` +
+          (response.url ? ` (${response.url})` : '') + '.'
+        );
+      }
       if (
         typeof WebAssembly.instantiateStreaming === 'function' &&
         (response.headers.get('content-type') || '').trim().toLowerCase().startsWith('application/wasm')

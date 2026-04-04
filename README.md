@@ -23,6 +23,8 @@ Encode TTF/OTF fonts to WOFF2 using the official [google/woff2](https://github.c
 npm install woff2-encode-wasm
 ```
 
+> **Note:** This package is ESM-only. It cannot be `require()`'d from CommonJS.
+
 ## API
 
 ```ts
@@ -135,6 +137,13 @@ npm run fetch-deps     # download google/woff2 v1.0.2 + brotli v1.1.0
 npm run build:wasm     # compile to dist/encoder.wasm (~750 KB)
 npm run build:js       # compile TS to dist/index.js + dist/index.d.ts
 ```
+
+> **Release note:** `npm pack` / `npm publish` runs `prepack`, which
+> rebuilds JS/types via `tsc` so they are always in sync with source.
+> The `.wasm` binary is **not** rebuilt automatically because `emcc` may
+> not be available on the publishing machine. If you change
+> `src/native/wrapper.cc` or the build script, run `npm run build:wasm`
+> manually before publishing.
 
 ## Architecture
 

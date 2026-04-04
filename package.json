@@ -27,7 +27,7 @@
     "test:node": "vitest run --config vitest.config.ts",
     "test:workers": "vitest run --config vitest.workers.config.ts",
     "test:deno": "deno run --allow-read test/deno-smoke.ts",
-    "prepack": "test -f dist/index.js && test -f dist/index.d.ts && test -f dist/encoder.wasm || (echo 'ERROR: dist/ artifacts missing. Run npm run build first.' >&2 && exit 1)",
+    "prepack": "npm run build:js && test -f dist/encoder.wasm || (echo 'ERROR: dist/encoder.wasm missing. Run npm run build:wasm first.' >&2 && exit 1)",
     "clean": "rm -rf dist vendor/google-woff2 vendor/brotli"
   },
   "keywords": [
