@@ -46,7 +46,7 @@
     "url": "git+https://github.com/kyosuke/woff2-encode-wasm.git"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.16.13",
