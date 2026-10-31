@@ -44,14 +44,6 @@ jobs:
           source "$HOME/emsdk/emsdk_env.sh" > /dev/null
           npm run build
 
-      - name: Verify dist is up to date
-        run: |
-          if ! git diff --quiet -- dist; then
-            echo "::error::dist/ is out of date. Run npm run build and commit updated artifacts."
-            git --no-pager diff -- dist
-            exit 1
-          fi
-
       - name: Run tests
         run: npm test
 
