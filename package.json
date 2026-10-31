@@ -1,6 +1,6 @@
 {
   "name": "woff2-encode-wasm",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Encode TTF/OTF fonts to WOFF2 using the official google/woff2 library compiled to WebAssembly",
   "type": "module",
   "main": "./dist/index.js",
