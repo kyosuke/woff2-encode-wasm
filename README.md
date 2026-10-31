@@ -2,7 +2,9 @@
 
 Encode TTF/OTF fonts to WOFF2 using the official [google/woff2](https://github.com/google/woff2) C++ library compiled to WebAssembly.
 
-**Primary runtime target: Cloudflare Workers.** Also works in Node.js ≥ 18 and Deno.
+**Primary runtime target: Cloudflare Workers.** Also works in Node.js ≥ 22.
+
+Deno is still covered by a smoke test in CI but is not a supported target and may be dropped in a future release.
 
 ## What this package does
 
@@ -46,7 +48,7 @@ Initialise the WebAssembly module. Must be called once before `encode()`.
 | Type | Use case |
 |---|---|
 | `WebAssembly.Module` | Cloudflare Workers (import `.wasm` file) |
-| `ArrayBuffer` / `Uint8Array` | Node.js / Deno (read `.wasm` bytes) |
+| `ArrayBuffer` / `Uint8Array` | Node.js (read `.wasm` bytes) |
 | `Response` / `Promise<Response>` | `fetch()` based loading |
 
 Calling `init()` again after successful initialisation is a no-op.
@@ -98,30 +100,12 @@ const ttf = new Uint8Array(readFileSync('input.ttf'));
 const woff2 = await encode(ttf);
 ```
 
-### Deno
-
-```ts
-import { init, encode } from 'npm:woff2-encode-wasm';
-import { createRequire } from 'node:module';
-
-const require = createRequire(import.meta.url);
-const wasmPath = require.resolve('woff2-encode-wasm/encoder.wasm');
-await init(Deno.readFileSync(wasmPath));
-
-const ttf = new Uint8Array(await Deno.readFile('input.ttf'));
-const woff2 = await encode(ttf);
-```
-
-```bash
-deno run --allow-read --allow-env your_script.ts
-```
-
 ## Build from source
 
 Prerequisites:
 
 - [Emscripten SDK](https://emscripten.org/docs/getting_started/) (`emcc` on PATH) — for building the `.wasm`
-- [Deno](https://deno.com/) — only needed for `npm test` (runs the Deno smoke test)
+- [Deno](https://deno.com/) — only needed for `npm test` (Deno smoke test)
 
 ```bash
 npm run build          # fetch deps + compile wasm + compile TS
@@ -194,7 +178,7 @@ This makes the module trivially instantiable in any environment without Emscript
 |---|---|
 | google/woff2 | v1.0.2 |
 | google/brotli | v1.1.0 |
-| Emscripten | CI pinned to 5.0.5 (local builds may vary) |
+| Emscripten | CI pinned to 6.0.13 (local builds may vary) |
 
 ## License
 
