@@ -78,7 +78,7 @@ ALL_OBJS+=("$WRAPPER_OBJ")
 
 # --- Link ---
 echo "Linking to standalone WebAssembly..."
-emcc \
+em++ \
   -O3 \
   -flto \
   --no-entry \

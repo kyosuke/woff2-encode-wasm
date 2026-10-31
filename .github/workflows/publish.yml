@@ -46,8 +46,8 @@ jobs:
       - name: Install Emscripten SDK (pinned)
         run: |
           git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$HOME/emsdk"
-          "$HOME/emsdk/emsdk" install 5.0.5
-          "$HOME/emsdk/emsdk" activate 5.0.5
+          "$HOME/emsdk/emsdk" install 6.0.13
+          "$HOME/emsdk/emsdk" activate 6.0.13
 
       - name: Build (wasm + js)
         run: |
